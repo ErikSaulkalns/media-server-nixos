@@ -26,13 +26,9 @@ nixos-generate-config --no-filesystems --root /mnt
 mv /tmp/media-server-nixos/*.nix /mnt/etc/nixos/
 
 # Install NixOS
-nixos-install --no-root-password || {
+nixos-install || {
     echo "NixOS installation failed.";
     exit 1;
 }
-
-# Prompt to change password for the nixos user
-echo "Enter password for nixos user"
-chroot /mnt /run/current-system/sw/bin/passwd nixos
 
 echo "Installation completed successfully. REBOOT NOW!"
