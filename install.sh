@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Check if the script is run with sudo/root privileges
 if [ "$UID" -ne 0 ]; then
@@ -7,13 +8,31 @@ if [ "$UID" -ne 0 ]; then
     exit 1
 fi
 
-DISK_NAME="vda"
+# Install Git if not installed
+if ! command -v git &> /dev/null; then
+    nix-env -iA nixos.git
+fi
 
-# Fetch configuration
-curl https://raw.githubusercontent.com/ErikSaulkalns/media-server-nixos/main/disko/hybrid.nix -o /tmp/disko-config.nix || {
-    echo "Failed to fetch the configuration.";
+# Clone the entire project
+git clone https://github.com/ErikSaulkalns/media-server-nixos.git /tmp/media-server-nixos
+
+# Use disko to partition the drive
+nix run --extra-experimental-features 'nix-command flakes' github:nix-community/disko -- --mode disko /tmp/media-server-nixos/disko-config.nix
+
+# Generate NixOS config without filesystems
+nixos-generate-config --no-filesystems --root /mnt
+
+# Move configurations into place
+mv /tmp/media-server-nixos/*.nix /mnt/etc/nixos/
+
+# Install NixOS
+nixos-install --no-root-password || {
+    echo "NixOS installation failed.";
     exit 1;
 }
 
-# Use the disko to partition the drive
-nix run github:nix-community/disko -- --mode disko /tmp/disko-config.nix --arg disks "[ \"/dev/$DISK_NAME\" ]"
+# Prompt to change password for the nixos user
+echo "Enter password for nixos user"
+chroot /mnt /run/current-system/sw/bin/passwd nixos
+
+echo "Installation completed successfully. REBOOT NOW!"

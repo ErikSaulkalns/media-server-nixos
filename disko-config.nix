@@ -1,19 +1,20 @@
+{ ... }:
+
+let
+  params = import ./params.nix;
+in
 {
   disko.devices = {
     disk = {
-      main = {
+      vdb = {
+        device = params.diskName;
         type = "disk";
-        device = "/dev/disk/by-id/ata-Samsung_SSD_850_EVO_250GB_S21PNXAGB12345";
         content = {
           type = "gpt";
           partitions = {
-            boot = {
-              size = "1M";
-              type = "EF02"; # for grub MBR
-            };
             ESP = {
-              size = "512M";
               type = "EF00";
+              size = "500M";
               content = {
                 type = "filesystem";
                 format = "vfat";

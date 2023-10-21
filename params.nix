@@ -1,0 +1,3 @@
+{
+  diskName = "/dev/vda";
+}
